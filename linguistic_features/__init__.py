@@ -108,6 +108,16 @@ def decode_label_to_char(label_encode):
     # print(result)
     return ''.join(result)
 
+def is_tone(text):
+    return "1" <= text <= "5"
+
+
+def is_punctuation(text):
+    return text == "0" or text == "dot"
+
+def is_phoneme(text):
+    return not (is_tone(text) or is_punctuation(text))
+
 
 def create_label_phoneme(sentence):
     sentence = sentence.upper()
@@ -119,20 +129,25 @@ def create_label_phoneme(sentence):
     all_phonemes = encode_labels_phoneme([sentence])
     phonemes_queue.extend(all_phonemes[0])
     phonemes_queue.extend([null_value, null_value])
+    phonemes_queue = list(filter(lambda phone: is_phoneme(phone), phonemes_queue))
     print(phonemes_queue)
 
     for word in sentence.split():
         word_id = word_id + 1
         phonemes = encode_labels_phoneme([word])[0]
+        tone = 0
+        if is_tone(phonemes[-1]):
+            tone = int(phonemes[-1])
+            phonemes = np.delete(phonemes, -1, 0)
 
         for phoneme in phonemes:
             phone_id = phone_id + 1
-            phonemes_queue.append(phoneme)
+            print(phoneme)
             prev_phone = phonemes_queue[phone_id - 1]
-            prev_prev_phone = phonemes_queue[phone_id - 2]
+            # prev_prev_phone = phonemes_queue[phone_id - 2]
             next_phone = phonemes_queue[phone_id + 1]
-            next_next_phone = phonemes_queue[phone_id + 2]
-            label = prev_prev_phone + "^" + prev_phone + "-" + phoneme + "+" + next_phone + "=" + next_next_phone + "@"
+            # next_next_phone = phonemes_queue[phone_id + 2]
+            label = prev_phone + "-" + phoneme + "+" + next_phone + "@" + str(tone)
             labels.append(label)
 
     return labels
